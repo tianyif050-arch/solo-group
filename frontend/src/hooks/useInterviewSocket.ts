@@ -105,6 +105,8 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
   const finalTranscriptRef = useRef('')
   const recognitionRef = useRef<any | null>(null)
   const recognitionRestartTimerRef = useRef<number | null>(null)
+  const recognitionWatchdogTimerRef = useRef<number | null>(null)
+  const recognitionLastEventTsRef = useRef<number>(0)
   const sessionIdRef = useRef<string>('')
 
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -414,6 +416,10 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       window.clearTimeout(recognitionRestartTimerRef.current)
       recognitionRestartTimerRef.current = null
     }
+    if (recognitionWatchdogTimerRef.current) {
+      window.clearInterval(recognitionWatchdogTimerRef.current)
+      recognitionWatchdogTimerRef.current = null
+    }
     const rec = recognitionRef.current
     recognitionRef.current = null
     if (!rec) return
@@ -432,15 +438,24 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
     const Ctor = getWebSpeechRecognitionCtor()
     if (!Ctor) throw new Error('当前浏览器不支持 Web Speech API')
     if (recognitionRef.current) return
+    // 先做一次麦克风权限预检，避免“已点开始但一直没有转写”。
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      s.getTracks().forEach((t) => t.stop())
+    } catch (e: any) {
+      throw new Error(`麦克风不可用：${String(e?.message || e || 'permission denied')}`)
+    }
 
     const rec = new Ctor()
     recognitionRef.current = rec
+    recognitionLastEventTsRef.current = Date.now()
     rec.lang = 'zh-CN'
     rec.continuous = true
     rec.interimResults = true
     rec.maxAlternatives = 1
 
     rec.onresult = (evt: any) => {
+      recognitionLastEventTsRef.current = Date.now()
       let interim = ''
       let finalText = ''
       for (let i = evt.resultIndex; i < evt.results.length; i++) {
@@ -460,6 +475,7 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       }
     }
     rec.onerror = (e: any) => {
+      recognitionLastEventTsRef.current = Date.now()
       const msg = String(e?.error || e?.message || e || 'Web Speech error')
       setLastError(msg)
       setIsListening(false)
@@ -475,6 +491,7 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       }
     }
     rec.onend = () => {
+      recognitionLastEventTsRef.current = Date.now()
       if (recognitionRef.current === rec) recognitionRef.current = null
       setIsListening(false)
       // 某些浏览器会在静音时自动结束识别，保持“开始面试”状态时自动续接。
@@ -494,6 +511,18 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       recognitionRef.current = null
       throw e
     }
+    if (recognitionWatchdogTimerRef.current) window.clearInterval(recognitionWatchdogTimerRef.current)
+    recognitionWatchdogTimerRef.current = window.setInterval(() => {
+      if (!desiredListeningRef.current) return
+      if (recognitionRef.current !== rec) return
+      const idleMs = Date.now() - recognitionLastEventTsRef.current
+      // 部分浏览器会“挂住”不再产出结果，这里主动重启一次。
+      if (idleMs > 10000) {
+        try {
+          rec.stop()
+        } catch {}
+      }
+    }, 2500)
     setIsListening(true)
   }, [sendText])
 
@@ -516,6 +545,10 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
     if (recognitionRestartTimerRef.current) {
       window.clearTimeout(recognitionRestartTimerRef.current)
       recognitionRestartTimerRef.current = null
+    }
+    if (recognitionWatchdogTimerRef.current) {
+      window.clearInterval(recognitionWatchdogTimerRef.current)
+      recognitionWatchdogTimerRef.current = null
     }
     stopWebSpeech()
     stopAudioStreaming()
@@ -713,14 +746,21 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       await startWebSpeech()
       return
     }
+    if (options.mode === 'solo') {
+      throw new Error('当前浏览器不支持语音转写（建议使用 Chrome，并通过 localhost 访问）')
+    }
     await startBackendAudioStreaming()
-  }, [options.preferWebSpeech, startBackendAudioStreaming, startWebSpeech])
+  }, [options.mode, options.preferWebSpeech, startBackendAudioStreaming, startWebSpeech])
 
   const stopListening = useCallback(() => {
     desiredListeningRef.current = false
     if (recognitionRestartTimerRef.current) {
       window.clearTimeout(recognitionRestartTimerRef.current)
       recognitionRestartTimerRef.current = null
+    }
+    if (recognitionWatchdogTimerRef.current) {
+      window.clearInterval(recognitionWatchdogTimerRef.current)
+      recognitionWatchdogTimerRef.current = null
     }
     stopWebSpeech()
     stopAudioStreaming()
