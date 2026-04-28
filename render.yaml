@@ -3,7 +3,7 @@ services:
     name: solo-group-api
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render.txt
     startCommand: uvicorn fastapi_app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
@@ -15,7 +15,7 @@ services:
     name: solo-group-ws
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render.txt
     startCommand: python -m group_interview_demo.server --host 0.0.0.0 --port $PORT --mode llm --no-asr
     envVars:
       - key: PYTHON_VERSION

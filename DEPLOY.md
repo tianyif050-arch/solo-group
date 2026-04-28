@@ -4,10 +4,11 @@
 
 1. 打开 [Render Dashboard](https://dashboard.render.com/blueprint/new)。
 2. 选择你的仓库 `tianyif050-arch/solo-group`，Render 会识别根目录的 `render.yaml`。
-3. 创建后会得到两个公网地址：
+3. Render 构建使用 `backend/requirements-render.txt`（已去掉 `vosk`，避免云端构建失败）。
+4. 创建后会得到两个公网地址：
    - `solo-group-api`（HTTP API）
    - `solo-group-ws`（WebSocket）
-4. 在这两个服务里都设置 LLM 环境变量（二选一）：
+5. 在这两个服务里都设置 LLM 环境变量（二选一）：
    - 推荐：`ZHIPU_API_KEY`
    - 或者：`OPENAI_API_KEY` + `OPENAI_BASE_URL`（可选 `OPENAI_MODEL`）
 
