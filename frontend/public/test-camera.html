@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>摄像头测试</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px; background: #f1f5f9; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #1e293b; }
+    .video-box { width: 100%; aspect-ratio: 16/9; background: #0f172a; border-radius: 12px; margin: 20px 0; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    button { display: block; width: 100%; padding: 20px; font-size: 20px; font-weight: bold; background: #4f46e5; color: white; border: none; border-radius: 12px; cursor: pointer; margin-top: 20px; }
+    button:hover { background: #4338ca; }
+    .status { text-align: center; margin-top: 20px; font-size: 16px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📷 摄像头极简测试</h1>
+    <div class="video-box">
+      <video id="video" autoplay playsinline muted></video>
+    </div>
+    <div class="status" id="status">点击下方按钮开始</div>
+    <button id="btn">开启摄像头</button>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const btn = document.getElementById('btn');
+    const status = document.getElementById('status');
+
+    btn.addEventListener('click', async () => {
+      try {
+        status.textContent = '正在请求权限...';
+        console.log('1. 开始请求摄像头...');
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
+        
+        console.log('2. 权限获取成功！', stream);
+        status.textContent = '权限获取成功！正在连接设备...';
+        
+        video.srcObject = stream;
+        
+        video.onloadedmetadata = () => {
+          console.log('3. 视频元数据加载完成！');
+          status.textContent = '摄像头已开启！';
+        };
+        
+        video.onerror = (e) => {
+          console.error('视频播放错误:', e);
+          status.textContent = '视频播放出错';
+        };
+        
+      } catch (err) {
+        console.error('4. 发生错误:', err);
+        status.textContent = '错误: ' + err.message;
+        alert('无法打开摄像头！错误: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

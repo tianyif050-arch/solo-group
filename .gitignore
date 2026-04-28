@@ -1,0 +1,46 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+
+# Node / Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+.vite/
+
+# Runtime artifacts
+backend/group_interview_runs/
+backend/models/vosk-model-small-cn-0.22/
+frontend/vosk-model-small-cn-0.22/
+backend/static/tts/
+backend/static/resumes/
+backend/static/audio/
+persona/
+
+# Root-level design export cache
+/.figma/
+frontend/.figma/
+frontend/src/assets/.figma/
