@@ -60,6 +60,10 @@ function getWebSpeechRecognitionCtor(): any | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null
 }
 
+function normalizeSpeechError(err: any): string {
+  return String(err || '').trim().toLowerCase()
+}
+
 function hashRole(input: string) {
   const s = String(input || '')
   let h = 2166136261
@@ -476,8 +480,11 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
     }
     rec.onerror = (e: any) => {
       recognitionLastEventTsRef.current = Date.now()
-      const msg = String(e?.error || e?.message || e || 'Web Speech error')
-      setLastError(msg)
+      const raw = String(e?.error || e?.message || e || 'Web Speech error')
+      const msg = normalizeSpeechError(raw)
+      // no-speech 常见且可恢复，不作为用户错误提示。
+      if (msg === 'no-speech') setLastError('')
+      else setLastError(raw)
       setIsListening(false)
       // 大多数错误（如 no-speech / network）都可重试；权限类错误不自动重启。
       const fatal = ['not-allowed', 'service-not-allowed', 'audio-capture'].includes(msg)
@@ -487,7 +494,7 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
           recognitionRestartTimerRef.current = null
           if (!desiredListeningRef.current || recognitionRef.current) return
           void startWebSpeech().catch(() => {})
-        }, 350)
+        }, msg === 'no-speech' ? 120 : 350)
       }
     }
     rec.onend = () => {
