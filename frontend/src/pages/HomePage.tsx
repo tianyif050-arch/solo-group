@@ -14,10 +14,11 @@ export default function HomePage() {
 
   const heroBoardHref = useMemo(() => new URL('../assets/.figma/image/screenshot_624_416.png', import.meta.url).href, [])
   const heroMascotHref = useMemo(() => new URL('../assets/.figma/image/screenshot_638_1276.png', import.meta.url).href, [])
+  const baseUrl = (import.meta as any).env?.BASE_URL || '/'
 
   const feature1IconHref = useMemo(() => new URL('../../.figma/image/mo5sl2un-dn4eajz.png', import.meta.url).href, [])
-  const feature2IconHref = '/icons/assess.png'
-  const feature3IconHref = '/icons/plan.png'
+  const feature2IconHref = `${baseUrl}icons/assess.png`
+  const feature3IconHref = `${baseUrl}icons/plan.png`
 
   const resumeInputRef = useRef<HTMLInputElement>(null)
   const [resumeFileName, setResumeFileName] = useState<string | null>(null)

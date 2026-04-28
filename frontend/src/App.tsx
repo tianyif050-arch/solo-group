@@ -10,9 +10,10 @@ import SetupPage from '@/pages/SetupPage'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 export default function App() {
+  const baseName = String((import.meta as any).env?.BASE_URL || '/').replace(/\/+$/, '') || '/'
   return (
     <InterviewModeProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={baseName}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/setup" element={<SetupPage />} />
