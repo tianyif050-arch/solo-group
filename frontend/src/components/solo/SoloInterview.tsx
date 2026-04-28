@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BarChart3, BookText, Bot, Clock3, Eye, Gauge, Goal, MessageSquareWarning, Pause, PieChart, Play } from 'lucide-react'
+import { BarChart3, BookText, Bot, Clock3, Eye, Gauge, Goal, Menu, MessageSquareWarning, Pause, PieChart, Play } from 'lucide-react'
 import { useInterviewSocket } from '@/hooks/useInterviewSocket'
 import { useTTS } from '@/hooks/useTTS'
 import { stopAudioQueue, unlockAudioWithMic } from '@/utils/audioQueue'
@@ -47,7 +47,6 @@ function fmtMmSs(sec: number) {
 }
 
 export default function SoloInterview() {
-  const figmaHomeMenu = new URL('../../../.figma/image/mo5sl2um-itgag4l.svg', import.meta.url).href
   const examinerHref = new URL('../../assets/static/examiner.svg', import.meta.url).href
 
   useDemoStylesheet()
@@ -461,7 +460,7 @@ export default function SoloInterview() {
               </button>
             ) : null}
             <button className="ghost iconBtn" aria-label="menu">
-              <img src={figmaHomeMenu} alt="menu" className="h-5 w-5" />
+              <Menu className="h-5 w-5" />
             </button>
           </>
         }
