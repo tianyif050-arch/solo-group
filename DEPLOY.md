@@ -22,6 +22,8 @@
 - `VITE_WS_URL`：`wss://<solo-group-ws域名>/ws`
 - `VITE_GROUP_WS_URL`：`wss://<solo-group-ws域名>/ws`
 
+注意：`VITE_GROUP_WS_URL` 必须指向 `solo-group-ws` 服务（带 `/ws`），不要填 `solo-group-api` 的域名。
+
 ## 3. 启用 GitHub Pages
 
 1. 打开仓库 `Settings -> Pages`。

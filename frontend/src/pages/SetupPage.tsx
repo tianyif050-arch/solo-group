@@ -206,6 +206,8 @@ export default function SetupPage() {
     const backendWsUrls: string[] = []
     const envAny = (import.meta as any).env || {}
     const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const pageHost = typeof window !== 'undefined' ? String(window.location.hostname || '') : ''
+    const isLocalPage = pageHost === 'localhost' || pageHost === '127.0.0.1'
     const wsProto = pageIsHttps ? 'wss' : 'ws'
     const groupWs = String(envAny.VITE_GROUP_WS_URL || '').trim()
     if (groupWs) backendWsUrls.push(groupWs)
@@ -220,12 +222,14 @@ export default function SetupPage() {
       } catch {}
     }
     if (interviewMode === 'group') {
-      backendWsUrls.push(`${wsProto}://127.0.0.1:8800/ws`)
-      try {
-        if (String(window.location.port || '') === '5173') {
-          backendWsUrls.push(`${wsProto}://${window.location.host}/ws`)
-        }
-      } catch {}
+      if (isLocalPage) {
+        backendWsUrls.push(`${wsProto}://127.0.0.1:8800/ws`)
+        try {
+          if (String(window.location.port || '') === '5173') {
+            backendWsUrls.push(`${wsProto}://${window.location.host}/ws`)
+          }
+        } catch {}
+      }
     } else {
       try {
         backendWsUrls.push(`${wsProto}://${window.location.host}/ws`)
@@ -253,7 +257,7 @@ export default function SetupPage() {
           settled = true
           reject(
             new Error(
-              `WebSocket 连接失败：${candidates.join(' | ') || 'GROUP 模式请配置 VITE_WS_URL / VITE_GROUP_WS_URL'}（请确认 8800 群面后端已启动：python -m group_interview_demo.server --port 8800）`,
+              `WebSocket 连接失败：${candidates.join(' | ') || 'GROUP 模式请配置 VITE_GROUP_WS_URL（例如 wss://<你的-ws-服务域名>/ws）'}（本地调试可启动：python -m group_interview_demo.server --port 8800）`,
             ),
           )
           return

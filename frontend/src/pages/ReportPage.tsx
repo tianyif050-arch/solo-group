@@ -52,8 +52,9 @@ export default function ReportPage() {
     return v.replace(/\/+$/, '')
   }, [location.search])
 
-  const heroBgHref = useMemo(() => new URL('../assets/.figma/image/screenshot_624_416.png', import.meta.url).href, [])
-  const mascotHref = useMemo(() => new URL('../assets/.figma/image/screenshot_638_1276.png', import.meta.url).href, [])
+  const baseUrl = (import.meta as any).env?.BASE_URL || '/'
+  const heroBgHref = `${baseUrl}images/hero-board.png`
+  const mascotHref = `${baseUrl}images/hero-mascot.png`
 
   const [statusText, setStatusText] = useState(runId ? '加载中' : '缺少 run_id')
   const [report, setReport] = useState<Report | null>(null)

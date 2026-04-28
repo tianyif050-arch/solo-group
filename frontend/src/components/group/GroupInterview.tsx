@@ -267,6 +267,8 @@ export default function GroupInterview() {
     const urls: string[] = []
     const envAny = (import.meta as any).env || {}
     const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const pageHost = typeof window !== 'undefined' ? String(window.location.hostname || '') : ''
+    const isLocalPage = pageHost === 'localhost' || pageHost === '127.0.0.1'
     const wsProto = pageIsHttps ? 'wss' : 'ws'
     const groupWs = String(envAny.VITE_GROUP_WS_URL || '').trim()
     if (groupWs) urls.push(groupWs)
@@ -280,9 +282,11 @@ export default function GroupInterview() {
         urls.push(`${proto}//${u.host}/ws`)
       } catch {}
     }
-    try {
-      urls.push(`${wsProto}://127.0.0.1:8800/ws`)
-    } catch {}
+    if (isLocalPage) {
+      try {
+        urls.push(`${wsProto}://127.0.0.1:8800/ws`)
+      } catch {}
+    }
     if (!urls.length) {
       setWsUrl('')
       setStatusText('连接失败')

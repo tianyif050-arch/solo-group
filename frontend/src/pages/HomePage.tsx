@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useInterviewMode } from '@/interviewMode'
 import { useBodyClass } from '@/useBodyClass'
 import { useDemoStylesheet } from '@/useDemoStylesheet'
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { getOrCreateSoloSessionId, setSoloResumeUrl } from '@/utils/soloSession'
 import Topbar from '@/components/Topbar'
 
@@ -12,11 +12,11 @@ export default function HomePage() {
 
   const { interviewMode, setInterviewMode } = useInterviewMode()
 
-  const heroBoardHref = useMemo(() => new URL('../assets/.figma/image/screenshot_624_416.png', import.meta.url).href, [])
-  const heroMascotHref = useMemo(() => new URL('../assets/.figma/image/screenshot_638_1276.png', import.meta.url).href, [])
   const baseUrl = (import.meta as any).env?.BASE_URL || '/'
+  const heroBoardHref = `${baseUrl}images/hero-board.png`
+  const heroMascotHref = `${baseUrl}images/hero-mascot.png`
 
-  const feature1IconHref = useMemo(() => new URL('../../.figma/image/mo5sl2un-dn4eajz.png', import.meta.url).href, [])
+  const feature1IconHref = `${baseUrl}images/feature-interview.png`
   const feature2IconHref = `${baseUrl}icons/assess.png`
   const feature3IconHref = `${baseUrl}icons/plan.png`
 
