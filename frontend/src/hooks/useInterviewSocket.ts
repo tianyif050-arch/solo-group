@@ -104,6 +104,7 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
 
   const finalTranscriptRef = useRef('')
   const recognitionRef = useRef<any | null>(null)
+  const recognitionRestartTimerRef = useRef<number | null>(null)
   const sessionIdRef = useRef<string>('')
 
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -409,6 +410,10 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
   }, [])
 
   const stopWebSpeech = useCallback(() => {
+    if (recognitionRestartTimerRef.current) {
+      window.clearTimeout(recognitionRestartTimerRef.current)
+      recognitionRestartTimerRef.current = null
+    }
     const rec = recognitionRef.current
     recognitionRef.current = null
     if (!rec) return
@@ -458,10 +463,29 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
       const msg = String(e?.error || e?.message || e || 'Web Speech error')
       setLastError(msg)
       setIsListening(false)
+      // 大多数错误（如 no-speech / network）都可重试；权限类错误不自动重启。
+      const fatal = ['not-allowed', 'service-not-allowed', 'audio-capture'].includes(msg)
+      if (!fatal && desiredListeningRef.current) {
+        if (recognitionRestartTimerRef.current) window.clearTimeout(recognitionRestartTimerRef.current)
+        recognitionRestartTimerRef.current = window.setTimeout(() => {
+          recognitionRestartTimerRef.current = null
+          if (!desiredListeningRef.current || recognitionRef.current) return
+          void startWebSpeech().catch(() => {})
+        }, 350)
+      }
     }
     rec.onend = () => {
       if (recognitionRef.current === rec) recognitionRef.current = null
       setIsListening(false)
+      // 某些浏览器会在静音时自动结束识别，保持“开始面试”状态时自动续接。
+      if (desiredListeningRef.current) {
+        if (recognitionRestartTimerRef.current) window.clearTimeout(recognitionRestartTimerRef.current)
+        recognitionRestartTimerRef.current = window.setTimeout(() => {
+          recognitionRestartTimerRef.current = null
+          if (!desiredListeningRef.current || recognitionRef.current) return
+          void startWebSpeech().catch(() => {})
+        }, 200)
+      }
     }
 
     try {
@@ -488,6 +512,11 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
   }, [startWebSpeech])
 
   const disconnect = useCallback(() => {
+    desiredListeningRef.current = false
+    if (recognitionRestartTimerRef.current) {
+      window.clearTimeout(recognitionRestartTimerRef.current)
+      recognitionRestartTimerRef.current = null
+    }
     stopWebSpeech()
     stopAudioStreaming()
     stopVoicePlayback()
@@ -689,6 +718,10 @@ export function useInterviewSocket(opts: UseInterviewSocketOptions) {
 
   const stopListening = useCallback(() => {
     desiredListeningRef.current = false
+    if (recognitionRestartTimerRef.current) {
+      window.clearTimeout(recognitionRestartTimerRef.current)
+      recognitionRestartTimerRef.current = null
+    }
     stopWebSpeech()
     stopAudioStreaming()
     setIsUserSpeaking(false)
