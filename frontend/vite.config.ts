@@ -9,8 +9,10 @@ export default defineConfig(({ mode }) => {
   const backendUrl = env.VITE_API_URL || env.VITE_BACKEND_URL || 'http://127.0.0.1:8799'
   const wsBackendUrl = env.VITE_WS_BACKEND_URL || env.VITE_GROUP_API_URL || 'http://127.0.0.1:8800'
   const useHttps = env.VITE_HTTPS === 'true'
+  const basePath = env.VITE_BASE_PATH || '/'
   
   return {
+    base: basePath,
     plugins: [useHttps ? basicSsl() : undefined, react()].filter(Boolean),
     resolve: {
       alias: {

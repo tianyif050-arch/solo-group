@@ -66,10 +66,12 @@ def _no_store_file(path: str) -> web.FileResponse:
 
 def _cors_headers(request: web.Request) -> dict[str, str]:
     origin = str(request.headers.get("Origin") or "")
-    allowed = {"http://localhost:5173", "http://127.0.0.1:5173"}
-    if origin in allowed:
+    raw = str(os.getenv("CORS_ALLOW_ORIGINS") or "").strip()
+    allowed = {x.strip() for x in raw.split(",") if x.strip()} or {"http://localhost:5173", "http://127.0.0.1:5173"}
+    allow_any = "*" in allowed
+    if origin and (allow_any or origin in allowed):
         return {
-            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Origin": "*" if allow_any else origin,
             "Vary": "Origin",
             "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type,Authorization",
